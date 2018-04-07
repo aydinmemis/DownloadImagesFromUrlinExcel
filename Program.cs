@@ -15,34 +15,36 @@ namespace imagesDownload
     {
         static void Main(string[] args)
         {
-            OleDbConnection xlsxConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:\migros.xlsx;Extended Properties='Excel 12.0 Xml;HDR=YES'");
+            OleDbConnection xlsxConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:\ozdilek.xlsx;Extended Properties='Excel 12.0 Xml;HDR=YES'");
             int recordCount = 0;
             try
             {
                 if (xlsxConnection.State == System.Data.ConnectionState.Closed)
                 {
                     xlsxConnection.Open();
-                    OleDbCommand sqlCmd = new OleDbCommand("SELECT * FROM [Sayfa1$]", xlsxConnection);
+                    OleDbCommand sqlCmd = new OleDbCommand("SELECT * FROM [6$]", xlsxConnection);
                     OleDbDataReader xlsxRead = sqlCmd.ExecuteReader();
                     while (xlsxRead.Read())
                     {
                         string barkod = xlsxRead["BARCODE"].ToString();
                         //string name = xlsxRead["NAME"].ToString();
-                       // string smalImage = xlsxRead["Small Image"].ToString();
-                        string largeImage = xlsxRead["images3cdn"].ToString();
+                        // string smalImage = xlsxRead["Small Image"].ToString();
+                        // string largeImage = xlsxRead["images3cdn"].ToString();
+                        string MALINCINSI = xlsxRead["MALINCINSI"].ToString();
 
                         try
                         {
-                            SaveImage(largeImage, barkod, ImageFormat.Png);
+                            //SaveImage(largeImage, barkod, ImageFormat.Png);
+                            SaveImageOzdilek(barkod, ImageFormat.Jpeg);
                             recordCount++;
-                            Console.Title ="indirilen image Sayısı:"+recordCount;
-                          //  Console.Clear();
+                            Console.Title = "indirilen image Sayısı:" + recordCount;
+                            //  Console.Clear();
                         }
                         catch (Exception hata)
                         {
-                            Logger.LogMessage(hata.Message.ToString(),largeImage);                          
+                            Logger.LogMessage(hata.Message.ToString(), barkod);
                         }
-                       
+
                     }
                     xlsxConnection.Close();
                     Console.Clear();
@@ -56,27 +58,45 @@ namespace imagesDownload
             catch (Exception hata)
             {
 
-                Logger.LogMessage(hata.Message.ToString(),null);
+                Logger.LogMessage(hata.Message.ToString(), null);
             }
-           
+
         }
 
-        private static void SaveImage(string imageUrl, string barkod, ImageFormat format)
+        private static void SaveImageOzdilek(string barkod, ImageFormat format)
         {
-               using (WebClient client = new WebClient())
+            using (WebClient client = new WebClient())
+            {
+                Stream stream = client.OpenRead(@"https://img-ozdilek.mncdn.com/images/catalog/646x1000/" + barkod + ".jpg");
+                Bitmap bitmap = new Bitmap(stream);
+                if (bitmap != null)
                 {
-                    Stream stream = client.OpenRead(imageUrl);
-                    Bitmap bitmap = new Bitmap(stream);
-                    if (bitmap != null)
-                    {
-                        bitmap.Save(@"d:\images3cdn\" + barkod+".jpg",format);
-                   Console.WriteLine("Kaydedilen resmin barkodu :" + barkod);
-                    }
-                    stream.Flush();
-                    stream.Close();
-                    client.Dispose();
+                    bitmap.Save(@"d:\ozdilekImages1\" + barkod + ".jpg", format);
+                    Console.WriteLine("Kaydedilen resmin barkodu :" + barkod);
                 }
+                stream.Flush();
+                stream.Close();
+
             }
-        
+            #region  save images Migros
+            //    private static void SaveImage(string imageUrl, string barkod, ImageFormat format)
+            //{
+            //       using (WebClient client = new WebClient())
+            //        {
+            //            Stream stream = client.OpenRead(imageUrl);
+            //            Bitmap bitmap = new Bitmap(stream);
+            //            if (bitmap != null)
+            //            {
+            //                bitmap.Save(@"d:\images3cdn\" + barkod+".jpg",format);
+            //           Console.WriteLine("Kaydedilen resmin barkodu :" + barkod);
+            //            }
+            //            stream.Flush();
+            //            stream.Close();
+            //            client.Dispose();
+            //        }
+            //}
+            #endregion
+
+        }
     }
 }
